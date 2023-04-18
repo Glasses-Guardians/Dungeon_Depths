@@ -21,7 +21,6 @@ public class PlayerSwordMan : PlayerBase, IPlayerActions
     
     void Awake()
     {
-        hitBox = transform.GetChild(6).gameObject;
         stateMachine = new StateMachine<PlayerSwordMan>();
         stateMachine.AddState((int)SwordManStates.None, new SwordManState.None());
         stateMachine.AddState((int)SwordManStates.Start, new SwordManState.Start());
@@ -32,7 +31,7 @@ public class PlayerSwordMan : PlayerBase, IPlayerActions
 
         HpMax = 100f;
         HpCur = 100f;
-        AttackPower = 10f;
+        AttackPower = 5f;
         MoveSpeed = 3.5f;
         AttackDelay = 1f;
         AttackRange = 2f;

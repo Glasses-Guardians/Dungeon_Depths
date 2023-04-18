@@ -2,8 +2,11 @@ using UnityEngine;
 public class PlayerBase : MonoBehaviour
 {
     //구본혁
-    // 플레이어의 상위 클래스
-    // 세가지 종류의 플레이어가 공통적으로 가지는 기능들과 데이터들을 가져야한다. 
+    /*TODO
+     * 특성카드 적용 구현
+     * 카메라가 바라보는 방향이 캐릭터의 z축이 되게끔
+     * 카메라가 바라보는 방향이 플레이어의 forward 방향이 아니라면 플레이어의 축을 바꿔줌
+     */
 
     public Animator animator;
     #region 상태관련
@@ -35,6 +38,7 @@ public class PlayerBase : MonoBehaviour
     protected Rigidbody rbody { get; set; }
     #endregion
 
+    protected float hDir, vDir;
     protected Vector3 moveDir;
 
     protected virtual void Update()
@@ -44,7 +48,6 @@ public class PlayerBase : MonoBehaviour
     }
 
     #region 행동:회전
-
     /// <summary>
     /// 함수가 호출되면 카메라의 local좌표계와 플레이어의 local좌표계를 맞춰준다.
     /// </summary>
@@ -60,16 +63,18 @@ public class PlayerBase : MonoBehaviour
         moveDir = transform.TransformDirection(moveDir);
     }
     #endregion
-
     #region 행동:이동
     public void Move()
     {
         if(isAttack || isDodge || isCast) return;
 
-        // x축과 z축의 입력값을 방향으로 설정한다.
-        moveDir = new Vector3(Input.GetAxisRaw("Horizontal"), 0, Input.GetAxisRaw("Vertical")).normalized;
+        hDir = Input.GetAxisRaw("Horizontal");
+        vDir = Input.GetAxisRaw("Vertical");
 
-        if(moveDir != Vector3.zero)
+        // x축과 z축의 입력값을 방향으로 설정한다.
+        moveDir = new Vector3(hDir, 0, vDir).normalized;
+
+        if(vDir != 0 || hDir != 0)
             CharacterAxisRotate();
 
         // 플레이어 캐릭터는 키보드로 받은 방향을 바라본다.
@@ -98,26 +103,28 @@ public class PlayerBase : MonoBehaviour
     #region 행동:점프
     protected virtual void Jump()
     {
-        // 플레이어가 떨어지는 상태라면 플레이어와 바닥사이의 거리를 Raycast를 통해 측정한다.
         if(rbody.velocity.y < 0)
-        {
-            RaycastHit groundHit;
-            if(Physics.Raycast(transform.position, Vector3.down, out groundHit, 0.3f)) // 밑으로 Raycast를 쏴서 땅을 한번더 확인
-            {
-                isJump = false;
-                jumpedCnt = 0;
-            }
-        }
-        if(isAttack ||  isDodge || isCast) return;
+            CheckPlayerLand(); 
+        if(isAttack || isDodge || isCast) return;
 
-        // 점프 버튼이 눌렸고, 점프 가능한 횟수보다 점프한 횟수가 적다면
-        if(Input.GetButtonDown("Jump") && jumpedCnt < possibleJumpNum)
+        if(Input.GetButtonDown("Jump") && jumpedCnt < possibleJumpNum) // 점프중이 아닌데 점프키가 눌렸다면
         {
             isJump = true;
             rbody.velocity = Vector3.up * jumpPower;
             animator.SetTrigger("JumpTrigger");
             ++jumpedCnt;
         }
+    }
+
+    protected void CheckPlayerLand()
+    {
+        RaycastHit groundHit;
+        if(Physics.Raycast(transform.position, Vector3.down, out groundHit, 0.3f)) // 밑으로 Raycast를 쏘아서 땅을 한번더 확인
+        {
+            isJump = false;
+            jumpedCnt = 0;
+        }
+
     }
     #endregion
     
